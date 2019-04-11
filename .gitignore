@@ -1,0 +1,8 @@
+# IntelliJ project folder
+.idea/
+
+# Test images
+test*.jpg
+test*.png
+out.*
+main.go
