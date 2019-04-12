@@ -144,6 +144,8 @@ func imageToGrayscale(img image.Image) *image.Gray {
 func errorDiffusionDither(img *image.Gray, invert bool) {
 	width := img.Bounds().Max.X
 	height := img.Bounds().Max.Y
+	xLim := width - 1
+	yLim := height - 1
 
 	var low uint8 = 0
 	var high uint8 = math.MaxUint8
@@ -163,33 +165,31 @@ func errorDiffusionDither(img *image.Gray, invert bool) {
 				dithVal = low
 			}
 
-			dithErr := float64(pixVal) - float64(dithVal)
-
 			img.SetGray(x, y, color.Gray{Y: dithVal})
 
-			if x < width-1 {
-				img.SetGray(x+1, y, color.Gray{
-					Y: uint8(int(img.At(x+1, y).(color.Gray).Y) + int(dithErr*sevenSixteenths)),
-				})
+			dithErr := float64(pixVal) - float64(dithVal)
 
-				if y < height-1 {
-					img.SetGray(x+1, y+1, color.Gray{
-						Y: uint8(int(img.At(x+1, y+1).(color.Gray).Y) + int(dithErr*oneSixteenth)),
-					})
+			if x < xLim {
+				addErrorContrib(img, x+1, y, dithErr, sevenSixteenths)
+
+				if y < yLim {
+					addErrorContrib(img, x+1, y+1, dithErr, oneSixteenth)
 				}
 			}
 
-			if y < height-1 {
-				img.SetGray(x, y+1, color.Gray{
-					Y: uint8(int(img.At(x, y+1).(color.Gray).Y) + int(dithErr*fiveSixteenths)),
-				})
+			if y < yLim {
+				addErrorContrib(img, x, y+1, dithErr, fiveSixteenths)
 
 				if x > 0 {
-					img.SetGray(x-1, y+1, color.Gray{
-						Y: uint8(int(img.At(x-1, y+1).(color.Gray).Y) + int(dithErr*threeSixteenths)),
-					})
+					addErrorContrib(img, x-1, y+1, dithErr, threeSixteenths)
 				}
 			}
 		}
 	}
+}
+
+func addErrorContrib(img *image.Gray, x, y int, errVal, perc float64) {
+	img.SetGray(x, y, color.Gray{
+		Y: uint8(int(img.At(x, y).(color.Gray).Y) + int(errVal*perc)),
+	})
 }

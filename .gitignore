@@ -1,5 +1,6 @@
-# IntelliJ project folder
+# JetBrains project files
 .idea/
+ditherphile.iml
 
 # Test images
 test*.jpg
